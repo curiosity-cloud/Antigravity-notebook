@@ -1,0 +1,24 @@
+{
+  "name": "antigravity-notebook",
+  "version": "1.0.0",
+  "description": "NotebookLM MCP integration for Antigravity",
+  "main": "index.js",
+  "scripts": {
+    "auth": "notebooklm-mcp-server auth",
+    "start": "notebooklm-mcp-server start",
+    "create-notebooks": "node scripts/create-notebooklm-notebooks.mjs"
+  },
+  "keywords": [
+    "notebooklm",
+    "mcp",
+    "antigravity"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "notebooklm-mcp-server": "^4.0.2"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.33.0"
+  }
+}

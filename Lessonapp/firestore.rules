@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each student (anonymous user) can read and write only their own data
+    match /students/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // The teacher can read every student's records (used by teacher.html)
+    // Replace the email below with your teacher account's email
+    match /{path=**}/records/{recordId} {
+      allow read: if request.auth != null
+                  && request.auth.token.email == "888888@firebase.com";
+    }
+  }
+}

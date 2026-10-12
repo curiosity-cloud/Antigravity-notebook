@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher Dashboard</title>
+  <style>
+    :root { --bg:#f5f6fa; --card:#ffffff; --text:#2f3542; --muted:#747d8c; --accent:#1e90ff; --line:#dfe4ea; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#1e272e; --card:#2f3640; --text:#f5f6fa; --muted:#a4b0be; --line:#485460; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+    h1 { margin: 0 0 16px; font-size: 1.5rem; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+    label { display:block; margin: 10px 0 4px; font-size:.9rem; color:var(--muted); }
+    input { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; font-size:1rem; background:transparent; color:var(--text); }
+    button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:.95rem; cursor:pointer; }
+    button.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
+    #loginForm button { margin-top:14px; }
+    .error { color:#e74c3c; margin-top:10px; min-height:1.2em; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .toolbar .summary { flex:1; color:var(--muted); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); }
+    th { cursor:pointer; user-select:none; color:var(--muted); font-weight:600; white-space:nowrap; }
+    th:hover { color:var(--text); }
+    td.num, th.num { text-align:right; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Class Progress</h1>
+
+  <section id="loginBox" class="card" hidden>
+    <form id="loginForm">
+      <label for="email">Teacher email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </section>
+
+  <section id="dash" class="card" hidden>
+    <div class="toolbar">
+      <span id="summary" class="summary"></span>
+      <button id="refreshBtn" class="secondary" type="button">Refresh</button>
+      <button id="signOutBtn" class="secondary" type="button">Sign out</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="name">Name</th>
+            <th data-key="attempts" class="num">Attempts</th>
+            <th data-key="points" class="num">Total points</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div id="dashError" class="error"></div>
+  </section>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, collectionGroup, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9k1-BbyseUMja6GHwIp5t2yAi8PgmIOY",
+    authDomain: "lessonapp-c37f3.firebaseapp.com",
+    projectId: "lessonapp-c37f3",
+    storageBucket: "lessonapp-c37f3.firebasestorage.app",
+    messagingSenderId: "822960009356",
+    appId: "1:822960009356:web:185e9f42368ad18112cba9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const $ = (id) => document.getElementById(id);
+  let students = [];
+  let sortKey = "points";
+  let sortDir = -1; // -1 = high to low
+
+  function show(loggedIn) {
+    $("loginBox").hidden = loggedIn;
+    $("dash").hidden = !loggedIn;
+  }
+
+  function render() {
+    const sorted = [...students].sort((a, b) => {
+      const x = a[sortKey], y = b[sortKey];
+      const cmp = typeof x === "string" ? x.localeCompare(y) : x - y;
+      return cmp * sortDir;
+    });
+    const tbody = $("rows");
+    tbody.replaceChildren();
+    for (const s of sorted) {
+      const tr = document.createElement("tr");
+      const cells = [
+        [s.name, ""],
+        [String(s.attempts), "num"],
+        [String(s.points), "num"]
+      ];
+      for (const [text, cls] of cells) {
+        const td = document.createElement("td");
+        td.textContent = text; // textContent keeps typed names from running as HTML
+        if (cls) td.className = cls;
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    $("summary").textContent = `${students.length} student record${students.length === 1 ? "" : "s"}`;
+  }
+
+  async function loadStudents() {
+    $("dashError").textContent = "";
+    try {
+      const snap = await getDocs(collectionGroup(db, "records"));
+      students = snap.docs.map((d) => {
+        const r = d.data();
+        const attempts = r.totalAttempts ??
+          Object.values(r.attempts || {}).reduce((a, b) => a + b, 0);
+        return {
+          name: r.name || d.id,
+          attempts,
+          points: r.totalPoints || 0
+        };
+      });
+      render();
+    } catch (err) {
+      console.warn(err);
+      students = [];
+      render();
+      $("dashError").textContent = err.code === "permission-denied"
+        ? "This account isn't allowed to view student records."
+        : "Could not load records. Please try again.";
+    }
+  }
+
+  // Click a column heading to sort by it (click again to reverse)
+  document.querySelectorAll("th[data-key]").forEach((th) => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (key === sortKey) {
+        sortDir = -sortDir;
+      } else {
+        sortKey = key;
+        sortDir = key === "name" ? 1 : -1;
+      }
+      render();
+    });
+  });
+
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("loginError").textContent = "";
+    try {
+      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+    } catch (err) {
+      $("loginError").textContent = "Sign-in failed. Check the email and password.";
+    }
+  });
+
+  $("refreshBtn").addEventListener("click", loadStudents);
+  $("signOutBtn").addEventListener("click", () => signOut(auth));
+
+  // Students are anonymous users; only an email/password sign-in counts as the teacher
+  onAuthStateChanged(auth, (user) => {
+    if (user && !user.isAnonymous) {
+      show(true);
+      loadStudents();
+    } else {
+      show(false);
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Standard Deviation Quest | Gamified Math App</title>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Particle Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Student Login Modal -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title">📊 STD DEV QUEST</div>
+      <p style="font-weight: 700; color: #57606f;">Welcome High Nitec Gamer! Enter your Student ID or Name to track your progress & rank:</p>
+      <input type="text" id="studentNameInput" class="modal-input" placeholder="e.g. Alex_2304" />
+      <button class="comic-btn primary" onclick="handleStudentLogin()" style="width: 100%; padding: 14px; font-size: 1.2rem;">START QUEST 🚀</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- Top Status Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <span>🎮</span> STD DEV QUEST
+      </div>
+      <div class="user-badge" id="studentDisplayName">Student</div>
+      <div class="stats-group">
+        <div class="stat-item">⭐ <span id="userPoints">0</span> PTS</div>
+        <div class="stat-item">🔥 <span id="userStreak">0</span> STREAK</div>
+      </div>
+    </header>
+
+    <!-- Difficulty Category Navigation -->
+    <nav class="category-nav">
+      <button id="cat-btn-easy" class="cat-btn active" onclick="switchCategory('easy')">
+        <span>🟢 EASY</span>
+        <span class="badge-count" id="badge-easy">0/2</span>
+      </button>
+      <button id="cat-btn-medium" class="cat-btn" onclick="switchCategory('medium')">
+        <span>🟡 MEDIUM</span>
+        <span class="badge-count" id="badge-medium">0/2</span>
+      </button>
+      <button id="cat-btn-hard" class="cat-btn" onclick="switchCategory('hard')">
+        <span>🔴 HARD</span>
+        <span class="badge-count" id="badge-hard">0/2</span>
+      </button>
+    </nav>
+
+    <!-- Question Sub-Selector -->
+    <div id="questionSelectorBar" class="q-selector">
+      <!-- Buttons dynamically populated by JS -->
+    </div>
+
+    <!-- Main Question Card -->
+    <main class="comic-card">
+      <div class="question-title-box">
+        <h2 id="qTitle" style="font-size: 1.2rem; font-weight: 800;">Question Title</h2>
+        <span id="qTypePill" class="type-pill population">Population</span>
+      </div>
+
+      <p id="qDesc" style="font-weight: 700; color: #333;">Description text...</p>
+
+      <!-- Data Values Display -->
+      <div class="data-box">
+        <div class="data-label">Dataset (X)</div>
+        <div id="qDataValues" class="data-values">[ 2, 4, 6, 8 ]</div>
+      </div>
+
+      <!-- Interactive Dot Plot Visualizer -->
+      <div class="viz-container">
+        <div class="viz-title">Spread Visualizer (Data Dots & Distance from Mean)</div>
+        <canvas id="dotPlotCanvas"></canvas>
+      </div>
+
+      <!-- 4-Step Wizard Form -->
+      <section class="step-wizard" id="stepWizardContainer">
+        <!-- Steps rendered dynamically by script.js -->
+      </section>
+    </main>
+
+  </div>
+
+  <!-- Firebase Utilities Script -->
+  <script src="firebase-config.js"></script>
+
+  <!-- App Script -->
+  <script src="script.js"></script>
+</body>
+</html>
