@@ -2,11 +2,7 @@
   "mcpServers": {
     "notebooklm": {
       "command": "npx",
-      "args": [
-        "-y",
-        "notebooklm-mcp-server",
-        "start"
-      ],
+      "args": ["-y", "notebooklm-mcp-server", "start"],
       "env": {
         "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       }
